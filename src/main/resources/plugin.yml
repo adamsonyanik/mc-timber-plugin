@@ -1,0 +1,4 @@
+name: Timber
+version: 1.0
+main: io.github.adamson.MCTimber
+api-version: 1.19
