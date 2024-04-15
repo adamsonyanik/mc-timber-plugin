@@ -6,9 +6,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class LogBreakEventListener implements Listener {
 
@@ -19,16 +18,14 @@ public class LogBreakEventListener implements Listener {
         Material logType = event.getBlock().getType();
 
         int leafCount = 0;
-        LinkedHashMap<String, BlockAndLogDistance> openList = new LinkedHashMap<>();
+        ArrayList<BlockAndLogDistance> openList = new ArrayList<>();
         HashMap<String, Block> treeBlocks = new HashMap<>();
 
-        openList.put(event.getBlock().getX() + ";" + event.getBlock().getY() + ";" + event.getBlock().getZ(), new BlockAndLogDistance(event.getBlock(), 0));
+        openList.add(new BlockAndLogDistance(event.getBlock().getX() + ";" + event.getBlock().getY() + ";" + event.getBlock().getZ(), event.getBlock(), 0));
 
         while (!openList.isEmpty()) {
-            Map.Entry<String, BlockAndLogDistance> first = openList.firstEntry();
-            BlockAndLogDistance blockDist = first.getValue();
-            openList.remove(first.getKey());
-            treeBlocks.put(first.getKey(), blockDist.block);
+            BlockAndLogDistance blockDist = openList.remove(0);
+            treeBlocks.put(blockDist.id, blockDist.block);
 
             for (int y = 0; y <= 1; y++)
                 for (int x = -1; x <= 1; x++)
@@ -43,9 +40,9 @@ public class LogBreakEventListener implements Listener {
                             continue;
 
                         String id = newBlock.getX() + ";" + newBlock.getY() + ";" + newBlock.getZ();
-                        if (openList.get(id) != null || treeBlocks.get(id) != null) continue;
+                        if (openList.stream().anyMatch(b -> b.id.equals(id)) || treeBlocks.get(id) != null) continue;
 
-                        openList.putLast(id, new BlockAndLogDistance(newBlock, dist));
+                        openList.add(new BlockAndLogDistance(id, newBlock, dist));
 
                         if (isLeafOfLog(logType, newBlock.getType()))
                             leafCount++;
@@ -80,7 +77,7 @@ public class LogBreakEventListener implements Listener {
                 (logMaterial == Material.MANGROVE_LOG && leafMaterial == Material.MANGROVE_LEAVES);
     }
 
-    record BlockAndLogDistance(Block block, int distance) {
+    record BlockAndLogDistance(String id, Block block, int distance) {
 
     }
 }
